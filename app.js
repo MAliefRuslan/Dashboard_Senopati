@@ -142,13 +142,14 @@ function updateDashboard() {
         }
     });
 
-    // sort numerically
-    const dayLabels = Object.keys(salesByDay).sort((a,b) => Number(a) - Number(b));
-    const dayData = dayLabels.map(d => salesByDay[d]);
+    const existingDays = Object.keys(salesByDay).map(Number);
+    const maxDay = existingDays.length > 0 ? Math.max(...existingDays) : 31;
+    const fullDayLabels = Array.from({length: maxDay}, (_, i) => String(i + 1));
+    const fullDayData = fullDayLabels.map(d => salesByDay[d] || 0);
 
     // Update Charts
     updateHourChart(hourLabels, hourData);
-    updateDateChart(dayLabels, dayData);
+    updateDateChart(fullDayLabels, fullDayData);
 }
 
 // Common Chart config colors
@@ -211,6 +212,20 @@ function updateDateChart(labels, data) {
         chartDateInstance.destroy();
     }
 
+    const dateChartOptions = {
+        ...chartOptions,
+        scales: {
+            ...chartOptions.scales,
+            x: {
+                ...chartOptions.scales.x,
+                ticks: {
+                    ...chartOptions.scales.x.ticks,
+                    autoSkip: false
+                }
+            }
+        }
+    };
+
     chartDateInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -227,6 +242,6 @@ function updateDateChart(labels, data) {
                 pointRadius: 4
             }]
         },
-        options: chartOptions
+        options: dateChartOptions
     });
 }
