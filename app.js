@@ -220,8 +220,9 @@ function updateDashboard() {
             paymentCounts[method] = (paymentCounts[method] || 0) + 1;
         }
     });
-    const paymentLabels = Object.keys(paymentCounts);
-    const paymentData = Object.values(paymentCounts);
+    const sortedPayments = Object.entries(paymentCounts).sort((a,b) => b[1] - a[1]);
+    const paymentLabels = sortedPayments.map(p => p[0]);
+    const paymentData = sortedPayments.map(p => p[1]);
 
     // Update Charts
     updateHourChart(hourLabels, hourData);
@@ -442,17 +443,49 @@ function updatePaymentChart(labels, data) {
     const ctx = document.getElementById('chartPayment').getContext('2d');
     if (chartPaymentInstance) chartPaymentInstance.destroy();
 
+    const paymentOptions = JSON.parse(JSON.stringify(chartOptions));
+    paymentOptions.indexAxis = 'y';
+    paymentOptions.scales = {
+        x: {
+            beginAtZero: true,
+            ticks: { 
+                color: 'inherit',
+                callback: function(value) {
+                    return new Intl.NumberFormat('id-ID').format(value);
+                }
+            },
+            grid: { color: 'rgba(255,255,255,0.1)' }
+        },
+        y: {
+            ticks: { color: 'inherit' },
+            grid: { display: false }
+        }
+    };
+    paymentOptions.plugins = {
+        legend: { display: false },
+        tooltip: {
+            callbacks: {
+                label: function(context) {
+                    return 'Transaksi: ' + new Intl.NumberFormat('id-ID').format(context.raw);
+                }
+            }
+        }
+    };
+
     chartPaymentInstance = new Chart(ctx, {
-        type: 'doughnut',
+        type: 'bar',
         data: {
             labels: labels,
             datasets: [{
+                label: 'Transaksi',
                 data: data,
-                backgroundColor: pieColors,
+                backgroundColor: 'rgba(219, 39, 119, 0.8)',
+                borderColor: 'rgba(219, 39, 119, 1)',
                 borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.1)'
+                borderRadius: 4,
+                hoverBackgroundColor: 'rgba(219, 39, 119, 1)'
             }]
         },
-        options: doughnutOptions
+        options: paymentOptions
     });
 }
