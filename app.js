@@ -317,17 +317,24 @@ function updateDateChart(labels, data) {
     };
 
     chartDateInstance = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',
         data: {
             labels: labels,
             datasets: [{
                 label: 'Penjualan',
                 data: data,
-                backgroundColor: 'rgba(16, 185, 129, 0.5)',
+                backgroundColor: 'rgba(16, 185, 129, 0.15)',
                 borderColor: 'rgba(16, 185, 129, 1)',
-                borderWidth: 2,
-                borderRadius: 4,
-                hoverBackgroundColor: 'rgba(16, 185, 129, 0.8)'
+                borderWidth: 2.5,
+                tension: 0.3,
+                fill: true,
+                pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointHoverBackgroundColor: 'rgba(16, 185, 129, 1)',
+                pointHoverBorderColor: '#fff'
             }]
         },
         options: dateChartOptions
