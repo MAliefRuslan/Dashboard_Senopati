@@ -173,8 +173,31 @@ function updateDashboard() {
             visitCounts[d.VisitPurpose] = (visitCounts[d.VisitPurpose] || 0) + 1;
         }
     });
-    const visitLabels = Object.keys(visitCounts);
-    const visitData = Object.values(visitCounts);
+    const visitLabels = Object.keys(visitCounts).sort((a,b) => visitCounts[b] - visitCounts[a]);
+    const visitData = visitLabels.map(k => visitCounts[k]);
+
+    // Populate Transaction Types Mini Cards
+    const trxGrid = document.getElementById('transactionTypesGrid');
+    trxGrid.innerHTML = '';
+    const trxColors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#14b8a6'];
+    const totalVisits = visitData.reduce((a, b) => a + b, 0);
+
+    visitLabels.forEach((label, index) => {
+        const count = visitCounts[label];
+        const percent = totalVisits > 0 ? ((count / totalVisits) * 100).toFixed(1) : 0;
+        const color = trxColors[index % trxColors.length];
+        
+        const card = document.createElement('div');
+        card.className = 'trx-mini-card';
+        card.style.setProperty('--card-color', color);
+        
+        card.innerHTML = `
+            <div class="trx-mini-title">${label}</div>
+            <div class="trx-mini-count">${new Intl.NumberFormat('id-ID').format(count)}</div>
+            <div class="trx-mini-percent">${percent}%</div>
+        `;
+        trxGrid.appendChild(card);
+    });
 
     // 7. Payment Method (Count of unique bills)
     const paymentCounts = {};
