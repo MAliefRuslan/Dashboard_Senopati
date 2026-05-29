@@ -14,6 +14,19 @@ const formatCurrency = (value) => {
     }).format(value);
 };
 
+const formatShortCurrency = (value) => {
+    if (value >= 1e9) {
+        return 'Rp ' + (value / 1e9).toFixed(1).replace(/\.0$/, '') + ' M';
+    }
+    if (value >= 1e6) {
+        return 'Rp ' + (value / 1e6).toFixed(1).replace(/\.0$/, '') + ' jt';
+    }
+    if (value >= 1e3) {
+        return 'Rp ' + (value / 1e3).toFixed(1).replace(/\.0$/, '') + ' rb';
+    }
+    return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+};
+
 // Main Initialization
 document.addEventListener('DOMContentLoaded', async () => {
     extractLogoColor();
@@ -229,12 +242,24 @@ const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-        legend: { display: false }
+        legend: { display: false },
+        tooltip: {
+            callbacks: {
+                label: function(context) {
+                    return 'Penjualan: ' + formatShortCurrency(context.raw);
+                }
+            }
+        }
     },
     scales: {
         y: {
             beginAtZero: true,
-            ticks: { color: 'inherit' },
+            ticks: { 
+                color: 'inherit',
+                callback: function(value) {
+                    return formatShortCurrency(value);
+                }
+            },
             grid: { color: 'rgba(255,255,255,0.1)' }
         },
         x: {
@@ -319,7 +344,12 @@ function updateMenuChart(labels, data) {
     menuOptions.scales = {
         x: {
             beginAtZero: true,
-            ticks: { color: 'inherit' },
+            ticks: { 
+                color: 'inherit',
+                callback: function(value) {
+                    return formatShortCurrency(value);
+                }
+            },
             grid: { color: 'rgba(255,255,255,0.1)' }
         },
         y: {
@@ -332,7 +362,7 @@ function updateMenuChart(labels, data) {
         tooltip: {
             callbacks: {
                 label: function(context) {
-                    return formatCurrency(context.raw);
+                    return 'Penjualan: ' + formatShortCurrency(context.raw);
                 }
             }
         }
@@ -360,7 +390,21 @@ const doughnutOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-        legend: { position: 'right', labels: { color: 'inherit' } }
+        legend: { position: 'right', labels: { color: 'inherit' } },
+        tooltip: {
+            callbacks: {
+                label: function(context) {
+                    let label = context.label || '';
+                    if (label) {
+                        label += ': ';
+                    }
+                    if (context.parsed !== null) {
+                        label += new Intl.NumberFormat('id-ID').format(context.parsed);
+                    }
+                    return label;
+                }
+            }
+        }
     }
 };
 
