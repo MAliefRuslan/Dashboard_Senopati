@@ -164,13 +164,11 @@ function updateDashboard() {
     const menuLabels = topMenu.map(t => t[0]);
     const menuData = topMenu.map(t => t[1]);
 
-    // 6. Visit Purpose (Count of items or unique bills? Usually count of rows is fine, or sales amount. Let's do Sales Amount for Visit Purpose to be consistent with Revenue dashboard, wait user said "jenis transaksi", so count)
+    // 6. Visit Purpose (Nominal / Revenue)
     const visitCounts = {};
-    const uniqueVisitBills = new Set();
     filtered.forEach(d => {
-        if(d.VisitPurpose && d.SalesNumber && !uniqueVisitBills.has(d.SalesNumber)) {
-            uniqueVisitBills.add(d.SalesNumber);
-            visitCounts[d.VisitPurpose] = (visitCounts[d.VisitPurpose] || 0) + 1;
+        if(d.VisitPurpose) {
+            visitCounts[d.VisitPurpose] = (visitCounts[d.VisitPurpose] || 0) + (Number(d.Total) || 0);
         }
     });
     const visitLabels = Object.keys(visitCounts).sort((a,b) => visitCounts[b] - visitCounts[a]);
@@ -193,7 +191,7 @@ function updateDashboard() {
         
         card.innerHTML = `
             <div class="trx-mini-title">${label}</div>
-            <div class="trx-mini-count">${new Intl.NumberFormat('id-ID').format(count)}</div>
+            <div class="trx-mini-count">${formatCurrency(count)}</div>
             <div class="trx-mini-percent">${percent}%</div>
         `;
         trxGrid.appendChild(card);
@@ -205,7 +203,8 @@ function updateDashboard() {
     filtered.forEach(d => {
         if(d.PaymentMethod && d.SalesNumber && !uniquePayBills.has(d.SalesNumber)) {
             uniquePayBills.add(d.SalesNumber);
-            paymentCounts[d.PaymentMethod] = (paymentCounts[d.PaymentMethod] || 0) + 1;
+            let method = d.PaymentMethod.replace(/\s*\([^)]*\)/g, '').trim();
+            paymentCounts[method] = (paymentCounts[method] || 0) + 1;
         }
     });
     const paymentLabels = Object.keys(paymentCounts);
