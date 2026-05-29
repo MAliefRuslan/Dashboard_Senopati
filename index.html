@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Penjualan</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- App Container -->
+    <div class="app-container">
+        
+        <!-- Sidebar / Header -->
+        <header class="glass-panel header">
+            <div class="logo-container">
+                <img src="logo.jpeg" id="brand-logo" alt="Logo" crossorigin="anonymous">
+                <div class="brand-text">
+                    <h1>Senopati Dashboard</h1>
+                    <p>Penjualan & Analitik</p>
+                </div>
+            </div>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="yearFilter">Tahun</label>
+                    <select id="yearFilter">
+                        <option value="ALL">Semua Tahun</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="monthFilter">Bulan</label>
+                    <select id="monthFilter">
+                        <option value="ALL">Semua Bulan</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card glass-panel">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-details">
+                        <h3>Total Penjualan</h3>
+                        <p id="totalSales">Rp 0</p>
+                    </div>
+                </div>
+                <div class="kpi-card glass-panel">
+                    <div class="kpi-icon">🧾</div>
+                    <div class="kpi-details">
+                        <h3>Total Bill</h3>
+                        <p id="totalBill">0 Transaksi</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <div class="chart-container glass-panel">
+                    <h3>Penjualan Berdasarkan Jam</h3>
+                    <div class="canvas-wrapper">
+                        <canvas id="chartHour"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-container glass-panel">
+                    <h3>Penjualan Berdasarkan Tanggal</h3>
+                    <div class="canvas-wrapper">
+                        <canvas id="chartDate"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
