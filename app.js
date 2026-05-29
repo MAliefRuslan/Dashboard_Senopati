@@ -1,6 +1,9 @@
 let rawData = [];
 let chartHourInstance = null;
 let chartDateInstance = null;
+let chartMenuInstance = null;
+let chartVisitInstance = null;
+let chartPaymentInstance = null;
 
 // Currency Formatter
 const formatCurrency = (value) => {
@@ -117,9 +120,12 @@ function updateDashboard() {
     const totalSales = filtered.reduce((sum, curr) => sum + (Number(curr.Total) || 0), 0);
     document.getElementById('totalSales').textContent = formatCurrency(totalSales);
 
-    // 2. KPI Total Bill (Unique Sales Numbers)
+    // 2. KPI Total Bill & Rata-rata Transaksi
     const uniqueBills = new Set(filtered.map(d => d.SalesNumber).filter(Boolean));
     document.getElementById('totalBill').textContent = `${uniqueBills.size} Transaksi`;
+
+    const avgTrans = uniqueBills.size > 0 ? totalSales / uniqueBills.size : 0;
+    document.getElementById('avgTransaction').textContent = formatCurrency(avgTrans);
 
     // 3. Prepare Chart Data (Hour)
     const salesByHour = {};
@@ -147,9 +153,47 @@ function updateDashboard() {
     const fullDayLabels = Array.from({length: maxDay}, (_, i) => String(i + 1));
     const fullDayData = fullDayLabels.map(d => salesByDay[d] || 0);
 
+    // 5. Prepare Top 10 Menu
+    const salesByMenu = {};
+    filtered.forEach(d => {
+        if(d.Menu) salesByMenu[d.Menu] = (salesByMenu[d.Menu] || 0) + (Number(d.Total) || 0);
+    });
+    const topMenu = Object.entries(salesByMenu)
+        .sort((a,b) => b[1] - a[1])
+        .slice(0, 10);
+    const menuLabels = topMenu.map(t => t[0]);
+    const menuData = topMenu.map(t => t[1]);
+
+    // 6. Visit Purpose (Count of items or unique bills? Usually count of rows is fine, or sales amount. Let's do Sales Amount for Visit Purpose to be consistent with Revenue dashboard, wait user said "jenis transaksi", so count)
+    const visitCounts = {};
+    const uniqueVisitBills = new Set();
+    filtered.forEach(d => {
+        if(d.VisitPurpose && d.SalesNumber && !uniqueVisitBills.has(d.SalesNumber)) {
+            uniqueVisitBills.add(d.SalesNumber);
+            visitCounts[d.VisitPurpose] = (visitCounts[d.VisitPurpose] || 0) + 1;
+        }
+    });
+    const visitLabels = Object.keys(visitCounts);
+    const visitData = Object.values(visitCounts);
+
+    // 7. Payment Method (Count of unique bills)
+    const paymentCounts = {};
+    const uniquePayBills = new Set();
+    filtered.forEach(d => {
+        if(d.PaymentMethod && d.SalesNumber && !uniquePayBills.has(d.SalesNumber)) {
+            uniquePayBills.add(d.SalesNumber);
+            paymentCounts[d.PaymentMethod] = (paymentCounts[d.PaymentMethod] || 0) + 1;
+        }
+    });
+    const paymentLabels = Object.keys(paymentCounts);
+    const paymentData = Object.values(paymentCounts);
+
     // Update Charts
     updateHourChart(hourLabels, hourData);
     updateDateChart(fullDayLabels, fullDayData);
+    updateMenuChart(menuLabels, menuData);
+    updateVisitChart(visitLabels, visitData);
+    updatePaymentChart(paymentLabels, paymentData);
 }
 
 // Common Chart config colors
@@ -227,21 +271,101 @@ function updateDateChart(labels, data) {
     };
 
     chartDateInstance = new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
             labels: labels,
             datasets: [{
                 label: 'Penjualan',
                 data: data,
-                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                backgroundColor: 'rgba(16, 185, 129, 0.5)',
                 borderColor: 'rgba(16, 185, 129, 1)',
-                borderWidth: 3,
-                tension: 0.3, // smooth curves
-                fill: true,
-                pointBackgroundColor: 'rgba(16, 185, 129, 1)',
-                pointRadius: 4
+                borderWidth: 2,
+                borderRadius: 4,
+                hoverBackgroundColor: 'rgba(16, 185, 129, 0.8)'
             }]
         },
         options: dateChartOptions
+    });
+}
+
+function updateMenuChart(labels, data) {
+    const ctx = document.getElementById('chartMenu').getContext('2d');
+    if (chartMenuInstance) chartMenuInstance.destroy();
+
+    const menuOptions = JSON.parse(JSON.stringify(chartOptions));
+    menuOptions.indexAxis = 'y';
+
+    chartMenuInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Penjualan',
+                data: data,
+                backgroundColor: 'rgba(245, 158, 11, 0.5)',
+                borderColor: 'rgba(245, 158, 11, 1)',
+                borderWidth: 2,
+                borderRadius: 4,
+                hoverBackgroundColor: 'rgba(245, 158, 11, 0.8)'
+            }]
+        },
+        options: menuOptions
+    });
+}
+
+const doughnutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { position: 'right', labels: { color: 'inherit' } }
+    }
+};
+
+const pieColors = [
+    'rgba(59, 130, 246, 0.7)',
+    'rgba(16, 185, 129, 0.7)',
+    'rgba(245, 158, 11, 0.7)',
+    'rgba(239, 68, 68, 0.7)',
+    'rgba(139, 92, 246, 0.7)',
+    'rgba(236, 72, 153, 0.7)',
+    'rgba(20, 184, 166, 0.7)',
+    'rgba(244, 63, 94, 0.7)'
+];
+
+function updateVisitChart(labels, data) {
+    const ctx = document.getElementById('chartVisit').getContext('2d');
+    if (chartVisitInstance) chartVisitInstance.destroy();
+
+    chartVisitInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: pieColors,
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.1)'
+            }]
+        },
+        options: doughnutOptions
+    });
+}
+
+function updatePaymentChart(labels, data) {
+    const ctx = document.getElementById('chartPayment').getContext('2d');
+    if (chartPaymentInstance) chartPaymentInstance.destroy();
+
+    chartPaymentInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: pieColors,
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.1)'
+            }]
+        },
+        options: doughnutOptions
     });
 }
