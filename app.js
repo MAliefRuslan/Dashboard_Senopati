@@ -294,6 +294,27 @@ function updateMenuChart(labels, data) {
 
     const menuOptions = JSON.parse(JSON.stringify(chartOptions));
     menuOptions.indexAxis = 'y';
+    menuOptions.scales = {
+        x: {
+            beginAtZero: true,
+            ticks: { color: 'inherit' },
+            grid: { color: 'rgba(255,255,255,0.1)' }
+        },
+        y: {
+            ticks: { color: 'inherit' },
+            grid: { display: false }
+        }
+    };
+    menuOptions.plugins = {
+        legend: { display: false },
+        tooltip: {
+            callbacks: {
+                label: function(context) {
+                    return formatCurrency(context.raw);
+                }
+            }
+        }
+    };
 
     chartMenuInstance = new Chart(ctx, {
         type: 'bar',
@@ -302,11 +323,11 @@ function updateMenuChart(labels, data) {
             datasets: [{
                 label: 'Penjualan',
                 data: data,
-                backgroundColor: 'rgba(245, 158, 11, 0.5)',
-                borderColor: 'rgba(245, 158, 11, 1)',
-                borderWidth: 2,
+                backgroundColor: 'rgba(219, 39, 119, 0.8)',
+                borderColor: 'rgba(219, 39, 119, 1)',
+                borderWidth: 1,
                 borderRadius: 4,
-                hoverBackgroundColor: 'rgba(245, 158, 11, 0.8)'
+                hoverBackgroundColor: 'rgba(219, 39, 119, 1)'
             }]
         },
         options: menuOptions
