@@ -210,14 +210,12 @@ function updateDashboard() {
         trxGrid.appendChild(card);
     });
 
-    // 7. Payment Method (Count of unique bills)
+    // 7. Payment Method (Revenue / Total)
     const paymentCounts = {};
-    const uniquePayBills = new Set();
     filtered.forEach(d => {
-        if(d.PaymentMethod && d.SalesNumber && !uniquePayBills.has(d.SalesNumber)) {
-            uniquePayBills.add(d.SalesNumber);
+        if(d.PaymentMethod) {
             let method = d.PaymentMethod.replace(/\s*\([^)]*\)/g, '').trim();
-            paymentCounts[method] = (paymentCounts[method] || 0) + 1;
+            paymentCounts[method] = (paymentCounts[method] || 0) + (Number(d.Total) || 0);
         }
     });
     const sortedPayments = Object.entries(paymentCounts).sort((a,b) => b[1] - a[1]);
@@ -451,7 +449,7 @@ function updatePaymentChart(labels, data) {
             ticks: { 
                 color: 'inherit',
                 callback: function(value) {
-                    return new Intl.NumberFormat('id-ID').format(value);
+                    return formatShortCurrency(value);
                 }
             },
             grid: { color: 'rgba(255,255,255,0.1)' }
@@ -466,7 +464,7 @@ function updatePaymentChart(labels, data) {
         tooltip: {
             callbacks: {
                 label: function(context) {
-                    return 'Transaksi: ' + new Intl.NumberFormat('id-ID').format(context.raw);
+                    return 'Total: ' + formatShortCurrency(context.raw);
                 }
             }
         }
@@ -477,7 +475,7 @@ function updatePaymentChart(labels, data) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Transaksi',
+                label: 'Total Penjualan',
                 data: data,
                 backgroundColor: 'rgba(219, 39, 119, 0.8)',
                 borderColor: 'rgba(219, 39, 119, 1)',
