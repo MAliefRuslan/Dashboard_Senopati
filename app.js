@@ -140,7 +140,7 @@ function updateDashboard() {
     const avgTrans = uniqueBills.size > 0 ? totalSales / uniqueBills.size : 0;
     document.getElementById('avgTransaction').textContent = formatCurrency(avgTrans);
 
-    // 3. Prepare Chart Data (Hour)
+    // 3. Prepare Chart Data (Hour) - Rata-rata per hari
     const salesByHour = {};
     filtered.forEach(d => {
         if(d.Hour != null) {
@@ -149,8 +149,17 @@ function updateDashboard() {
         }
     });
 
+    // Count unique days for averaging
+    const uniqueDaysSet = new Set();
+    filtered.forEach(d => {
+        if(d.Year != null && d.Month != null && d.Day != null) {
+            uniqueDaysSet.add(`${d.Year}-${d.Month}-${d.Day}`);
+        }
+    });
+    const totalUniqueDays = uniqueDaysSet.size || 1;
+
     const hourLabels = Object.keys(salesByHour).sort();
-    const hourData = hourLabels.map(h => salesByHour[h]);
+    const hourData = hourLabels.map(h => Math.round(salesByHour[h] / totalUniqueDays));
 
     // 4. Prepare Chart Data (Date/Day)
     const salesByDay = {};
