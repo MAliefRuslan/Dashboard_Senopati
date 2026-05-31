@@ -112,22 +112,31 @@ function populateFilters() {
     const monthSelect = document.getElementById('monthFilter');
     const compare1 = document.getElementById('compareMonth1');
     const compare2 = document.getElementById('compareMonth2');
+    const englishMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
     months.forEach(m => {
+        let displayMonth = m;
+        const idx = englishMonths.indexOf(m);
+        if (idx !== -1) {
+            displayMonth = monthNames[idx];
+        } else if (Number.isInteger(Number(m)) && m >= 1 && m <= 12) {
+            displayMonth = monthNames[m - 1];
+        }
+
         const opt = document.createElement('option');
         opt.value = m;
-        opt.textContent = monthNames[m-1] || m;
+        opt.textContent = displayMonth;
         monthSelect.appendChild(opt);
 
         const opt1 = document.createElement('option');
         opt1.value = m;
-        opt1.textContent = monthNames[m-1] || m;
+        opt1.textContent = displayMonth;
         compare1.appendChild(opt1);
 
         const opt2 = document.createElement('option');
         opt2.value = m;
-        opt2.textContent = monthNames[m-1] || m;
+        opt2.textContent = displayMonth;
         compare2.appendChild(opt2);
     });
 
@@ -538,6 +547,7 @@ function updateCompareYearChart() {
     if (chartCompareYearInstance) chartCompareYearInstance.destroy();
 
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
+    const englishMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     
     let yearsToPlot = [];
     if (selectedYear === 'ALL') {
@@ -557,8 +567,18 @@ function updateCompareYearChart() {
     yearsToPlot.forEach((year, index) => {
         const monthlySales = Array(12).fill(0);
         rawData.forEach(d => {
-            if (Number(d.Year) === year && d.Month != null && d.Month >= 1 && d.Month <= 12) {
-                monthlySales[d.Month - 1] += (Number(d.Total) || 0);
+            if (Number(d.Year) === year && d.Month != null) {
+                let mIdx = -1;
+                const engIdx = englishMonths.indexOf(d.Month);
+                if (engIdx !== -1) {
+                    mIdx = engIdx;
+                } else if (Number.isInteger(Number(d.Month)) && d.Month >= 1 && d.Month <= 12) {
+                    mIdx = d.Month - 1;
+                }
+                
+                if (mIdx !== -1) {
+                    monthlySales[mIdx] += (Number(d.Total) || 0);
+                }
             }
         });
 
@@ -605,6 +625,7 @@ function updateCompareDailyChart() {
     if (chartCompareDailyInstance) chartCompareDailyInstance.destroy();
 
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const englishMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     
     const days = Array.from({length: 31}, (_, i) => String(i + 1));
     const salesM1 = Array(31).fill(0);
@@ -624,8 +645,15 @@ function updateCompareDailyChart() {
         }
     });
 
-    const label1 = monthNames[m1 - 1] || m1;
-    const label2 = monthNames[m2 - 1] || m2;
+    const getDisplayName = (mStr) => {
+        const idx = englishMonths.indexOf(mStr);
+        if (idx !== -1) return monthNames[idx];
+        if (Number.isInteger(Number(mStr)) && mStr >= 1 && mStr <= 12) return monthNames[mStr - 1];
+        return mStr;
+    };
+
+    const label1 = getDisplayName(m1);
+    const label2 = getDisplayName(m2);
 
     const color1 = 'rgba(232, 62, 140, 1)'; // Pink
     const color2 = 'rgba(59, 130, 246, 1)'; // Blue
