@@ -603,6 +603,8 @@ function updateCompareYearChart() {
     const compareYearOptions = JSON.parse(JSON.stringify(chartOptions));
     compareYearOptions.plugins.legend = { display: true, position: 'top', labels: { color: 'inherit' } };
     compareYearOptions.scales.x.ticks.autoSkip = false;
+    compareYearOptions.scales.y.ticks.callback = function(value) { return formatShortCurrency(value); };
+    compareYearOptions.plugins.tooltip.callbacks.label = function(context) { return 'Penjualan: ' + formatShortCurrency(context.raw); };
     
     chartCompareYearInstance = new Chart(ctx, {
         type: 'line',
@@ -691,6 +693,8 @@ function updateCompareDailyChart() {
 
     const compareDailyOptions = JSON.parse(JSON.stringify(chartOptions));
     compareDailyOptions.plugins.legend = { display: true, position: 'top', labels: { color: 'inherit' } };
+    compareDailyOptions.scales.y.ticks.callback = function(value) { return formatShortCurrency(value); };
+    compareDailyOptions.plugins.tooltip.callbacks.label = function(context) { return 'Penjualan: ' + formatShortCurrency(context.raw); };
 
     chartCompareDailyInstance = new Chart(ctx, {
         type: 'line',
