@@ -4,6 +4,8 @@ let chartDateInstance = null;
 let chartMenuInstance = null;
 let chartVisitInstance = null;
 let chartPaymentInstance = null;
+let chartCompareYearInstance = null;
+let chartCompareDailyInstance = null;
 
 // Currency Formatter
 const formatCurrency = (value) => {
@@ -108,12 +110,34 @@ function populateFilters() {
     });
 
     const monthSelect = document.getElementById('monthFilter');
+    const compare1 = document.getElementById('compareMonth1');
+    const compare2 = document.getElementById('compareMonth2');
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
     months.forEach(m => {
         const opt = document.createElement('option');
         opt.value = m;
-        opt.textContent = m;
+        opt.textContent = monthNames[m-1] || m;
         monthSelect.appendChild(opt);
+
+        const opt1 = document.createElement('option');
+        opt1.value = m;
+        opt1.textContent = monthNames[m-1] || m;
+        compare1.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = m;
+        opt2.textContent = monthNames[m-1] || m;
+        compare2.appendChild(opt2);
     });
+
+    if (months.length > 0) compare1.value = months[0];
+    if (months.length > 1) compare2.value = months[1];
+    else if (months.length > 0) compare2.value = months[0];
+
+    // Add event listeners for the new dropdowns
+    compare1.addEventListener('change', updateCompareDailyChart);
+    compare2.addEventListener('change', updateCompareDailyChart);
 }
 
 // Update Dashboard
@@ -237,6 +261,10 @@ function updateDashboard() {
     updateMenuChart(menuLabels, menuData);
     updateVisitChart(visitLabels, visitData);
     updatePaymentChart(paymentLabels, paymentData);
+    
+    // Update Comparison Charts
+    updateCompareYearChart();
+    updateCompareDailyChart();
 }
 
 // Common Chart config colors
@@ -501,5 +529,147 @@ function updatePaymentChart(labels, data) {
             }]
         },
         options: paymentOptions
+    });
+}
+
+function updateCompareYearChart() {
+    const selectedYear = document.getElementById('yearFilter').value;
+    const ctx = document.getElementById('chartCompareYear').getContext('2d');
+    if (chartCompareYearInstance) chartCompareYearInstance.destroy();
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
+    
+    let yearsToPlot = [];
+    if (selectedYear === 'ALL') {
+        yearsToPlot = [...new Set(rawData.map(d => d.Year))].filter(Boolean).sort((a,b)=>a-b);
+    } else {
+        yearsToPlot = [Number(selectedYear)];
+    }
+
+    const datasets = [];
+    const colorPalette = [
+        'rgba(59, 130, 246, 1)',   // Blue
+        'rgba(232, 62, 140, 1)',   // Pink
+        'rgba(16, 185, 129, 1)',   // Green
+        'rgba(245, 158, 11, 1)'    // Yellow
+    ];
+
+    yearsToPlot.forEach((year, index) => {
+        const monthlySales = Array(12).fill(0);
+        rawData.forEach(d => {
+            if (Number(d.Year) === year && d.Month != null && d.Month >= 1 && d.Month <= 12) {
+                monthlySales[d.Month - 1] += (Number(d.Total) || 0);
+            }
+        });
+
+        const color = colorPalette[index % colorPalette.length];
+        
+        datasets.push({
+            label: String(year),
+            data: monthlySales,
+            backgroundColor: color.replace('1)', '0.15)'),
+            borderColor: color,
+            borderWidth: 2.5,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: color,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8
+        });
+    });
+
+    const compareYearOptions = JSON.parse(JSON.stringify(chartOptions));
+    compareYearOptions.plugins.legend = { display: true, position: 'top', labels: { color: 'inherit' } };
+    compareYearOptions.scales.x.ticks.autoSkip = false;
+    
+    chartCompareYearInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: monthNames,
+            datasets: datasets
+        },
+        options: compareYearOptions
+    });
+}
+
+function updateCompareDailyChart() {
+    const selectedYear = document.getElementById('yearFilter').value;
+    const m1 = document.getElementById('compareMonth1').value;
+    const m2 = document.getElementById('compareMonth2').value;
+
+    if (!m1 || !m2) return;
+
+    const ctx = document.getElementById('chartCompareDaily').getContext('2d');
+    if (chartCompareDailyInstance) chartCompareDailyInstance.destroy();
+
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    
+    const days = Array.from({length: 31}, (_, i) => String(i + 1));
+    const salesM1 = Array(31).fill(0);
+    const salesM2 = Array(31).fill(0);
+
+    rawData.forEach(d => {
+        if (selectedYear !== 'ALL' && String(d.Year) !== String(selectedYear)) return;
+        
+        if (d.Day != null && d.Day >= 1 && d.Day <= 31) {
+            const dayIdx = d.Day - 1;
+            if (String(d.Month) === String(m1)) {
+                salesM1[dayIdx] += (Number(d.Total) || 0);
+            }
+            if (String(d.Month) === String(m2)) {
+                salesM2[dayIdx] += (Number(d.Total) || 0);
+            }
+        }
+    });
+
+    const label1 = monthNames[m1 - 1] || m1;
+    const label2 = monthNames[m2 - 1] || m2;
+
+    const color1 = 'rgba(232, 62, 140, 1)'; // Pink
+    const color2 = 'rgba(59, 130, 246, 1)'; // Blue
+
+    const datasets = [];
+    datasets.push({
+        label: label1,
+        data: salesM1,
+        backgroundColor: color1.replace('1)', '0.15)'),
+        borderColor: color1,
+        borderWidth: 2,
+        tension: 0.1,
+        fill: true,
+        pointBackgroundColor: color1,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 5
+    });
+    
+    if (m1 !== m2) {
+        datasets.push({
+            label: label2,
+            data: salesM2,
+            backgroundColor: color2.replace('1)', '0.15)'),
+            borderColor: color2,
+            borderWidth: 2,
+            tension: 0.1,
+            fill: true,
+            pointBackgroundColor: color2,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 5
+        });
+    }
+
+    const compareDailyOptions = JSON.parse(JSON.stringify(chartOptions));
+    compareDailyOptions.plugins.legend = { display: true, position: 'top', labels: { color: 'inherit' } };
+
+    chartCompareDailyInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: days,
+            datasets: datasets
+        },
+        options: compareDailyOptions
     });
 }

@@ -118,6 +118,34 @@
                         <canvas id="chartPayment"></canvas>
                     </div>
                 </div>
+            <!-- Comparison Charts Grid -->
+            <div class="charts-grid-full" style="margin-top: 2rem;">
+                <!-- Monthly Comparison (Year over Year) -->
+                <div class="chart-container glass-panel">
+                    <h3>Komparasi Penjualan per Bulan (Antar Tahun)</h3>
+                    <div class="canvas-wrapper" style="height: 350px;">
+                        <canvas id="chartCompareYear"></canvas>
+                    </div>
+                </div>
+
+                <!-- Daily Comparison (Month vs Month) -->
+                <div class="chart-container glass-panel">
+                    <div class="chart-header-custom">
+                        <h3>Komparasi Harian (Bulan vs Bulan)</h3>
+                        <div class="chart-filters">
+                            <select id="compareMonth1">
+                                <!-- Options will be populated by JS -->
+                            </select>
+                            <span class="vs-text">VS</span>
+                            <select id="compareMonth2">
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="canvas-wrapper" style="height: 350px;">
+                        <canvas id="chartCompareDaily"></canvas>
+                    </div>
+                </div>
             </div>
 
         </main>
